@@ -1,0 +1,154 @@
+#include <iostream>
+#include <vector>
+#include <string>
+#include <ctime>
+
+using namespace std;
+
+// ---------- Book Class ----------
+class Book {
+public:
+    string title, author, isbn;
+    bool isAvailable;
+    time_t checkoutDate;
+    string borrowerID;
+
+    Book(string t, string a, string i)
+        : title(t), author(a), isbn(i), isAvailable(true), checkoutDate(0), borrowerID("") {}
+};
+
+// ---------- Borrower Class ----------
+class Borrower {
+public:
+    string name, id;
+
+    Borrower(string n, string i) : name(n), id(i) {}
+};
+
+// ---------- Library System Class ----------
+class LibrarySystem {
+    vector<Book> books;
+    vector<Borrower> borrowers;
+
+public:
+    void addBook() {
+        string title, author, isbn;
+        cout << "Enter title: ";
+        getline(cin >> ws, title);
+        cout << "Enter author: ";
+        getline(cin >> ws, author);
+        cout << "Enter ISBN: ";
+        getline(cin >> ws, isbn);
+        books.push_back(Book(title, author, isbn));
+        cout << "Book added.\n";
+    }
+
+    void addBorrower() {
+        string name, id;
+        cout << "Enter borrower's name: ";
+        getline(cin >> ws, name);
+        cout << "Enter borrower ID: ";
+        getline(cin >> ws, id);
+        borrowers.push_back(Borrower(name, id));
+        cout << "Borrower added.\n";
+    }
+
+    void checkoutBook() {
+        string isbn, borrowerID;
+        cout << "Enter ISBN to check out: ";
+        getline(cin >> ws, isbn);
+        cout << "Enter borrower ID: ";
+        getline(cin >> ws, borrowerID);
+
+        for (Book &book : books) {
+            if (book.isbn == isbn && book.isAvailable) {
+                book.isAvailable = false;
+                book.checkoutDate = time(0);
+                book.borrowerID = borrowerID;
+                cout << "Book checked out.\n";
+                return;
+            }
+        }
+        cout << "Book not available or not found.\n";
+    }
+
+    void returnBook() {
+        string isbn;
+        cout << "Enter ISBN to return: ";
+        getline(cin >> ws, isbn);
+
+        for (Book &book : books) {
+            if (book.isbn == isbn && !book.isAvailable) {
+                time_t now = time(0);
+                double days = difftime(now, book.checkoutDate) / (60 * 60 * 24);
+                int overdue = static_cast<int>(days) - 14;
+
+                if (overdue > 0) {
+                    double fine = overdue * 0.50;
+                    cout << "Book is " << overdue << " days overdue.\n";
+                    cout << "Fine due: $" << fine << "\n";
+                } else {
+                    cout << "Book returned on time. No fine.\n";
+                }
+
+                book.isAvailable = true;
+                book.checkoutDate = 0;
+                book.borrowerID = "";
+                return;
+            }
+        }
+        cout << "Book not found or wasn't checked out.\n";
+    }
+
+    void searchBook() {
+        string keyword;
+        cout << "Search by title, author, or ISBN: ";
+        getline(cin >> ws, keyword);
+
+        for (const Book &book : books) {
+            if (book.title == keyword || book.author == keyword || book.isbn == keyword) {
+                cout << "Title: " << book.title << "\nAuthor: " << book.author
+                     << "\nISBN: " << book.isbn
+                     << "\nStatus: " << (book.isAvailable ? "Available" : "Checked out to " + book.borrowerID) << "\n\n";
+                return;
+            }
+        }
+        cout << "Book not found.\n";
+    }
+
+    void listAllBooks() {
+        cout << "\nAll Books:\n";
+        for (const Book &book : books) {
+            cout << "- " << book.title << " by " << book.author
+                 << " | ISBN: " << book.isbn
+                 << " | " << (book.isAvailable ? "Available" : "Checked out") << "\n";
+        }
+    }
+};
+
+// ---------- Main Menu ----------
+int main() {
+    LibrarySystem system;
+    int choice;
+
+    do {
+        cout << "\n=== Library Management System ===\n";
+        cout << "1. Add Book\n2. Add Borrower\n3. Search Book\n4. Checkout Book\n5. Return Book\n6. List All Books\n7. Exit\n";
+        cout << "Select option: ";
+        cin >> choice;
+        cin.ignore();
+
+        switch (choice) {
+            case 1: system.addBook(); break;
+            case 2: system.addBorrower(); break;
+            case 3: system.searchBook(); break;
+            case 4: system.checkoutBook(); break;
+            case 5: system.returnBook(); break;
+            case 6: system.listAllBooks(); break;
+            case 7: cout << "Goodbye!\n"; break;
+            default: cout << "Invalid option.\n";
+        }
+    } while (choice != 7);
+
+    return 0;
+}
